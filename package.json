@@ -1,0 +1,1 @@
+{"name":"endfieldcheck","private":true,"type":"module","scripts":{"build":"node scripts/build.mjs","test":"node --test scripts/test.mjs scripts/direct-api.test.mjs","dev":"node scripts/preview.mjs"}}

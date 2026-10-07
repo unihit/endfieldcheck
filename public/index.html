@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>엔드필드 체크리스트</title>
+
+  <meta name="theme-color" content="#11171e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <style>
+    :root {color-scheme:dark; --bg:#11171e; --panel:#1b242e; --edge:#2a3744; --text:#edf3f8; --muted:#9eafbd; --green:#93e5c0; --gold:#eac786}
+    * {box-sizing:border-box} body {margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main {max-width:620px;margin:auto;padding:28px 18px max(28px, env(safe-area-inset-bottom))}
+    .eyebrow {color:var(--green);letter-spacing:.2em;font-size:11px;font-weight:700} h1 {font-size:27px;margin:10px 0 8px;letter-spacing:-.04em}
+    .lead {color:var(--muted);font-size:13px;margin:0;line-height:1.6} .top {display:flex;justify-content:space-between;align-items:center;gap:12px}
+    button {font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent} button:disabled {cursor:wait;opacity:.55}
+    .refresh {background:var(--panel);color:var(--text);border:1px solid var(--edge);border-radius:12px;min-height:44px;padding:0 14px;font-size:13px;white-space:nowrap}
+    .summary {display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:23px 0}
+    .metric {background:var(--panel);border:1px solid var(--edge);border-radius:15px;padding:16px}
+    .metric small {color:var(--muted)} .metric strong {display:block;font-size:28px;margin:7px 0;color:var(--green)} .metric.week strong {color:var(--gold)}
+    .track {height:4px;background:#303c49;border-radius:3px;overflow:hidden} .fill {height:100%;width:0;background:var(--green);transition:width .2s}.week .fill{background:var(--gold)}
+    section {margin-top:26px}.section-head {display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    h2 {font-size:17px;margin:0 0 5px}.reset {color:var(--muted);font-size:11px}.clear{background:none;color:var(--muted);border:1px solid var(--edge);border-radius:9px;padding:9px 10px;font-size:11px}
+    .tasks {display:grid;gap:7px}.task {width:100%;display:flex;align-items:center;gap:12px;min-height:59px;padding:14px;text-align:left;border-radius:12px;border:1px solid var(--edge);background:var(--panel);color:var(--text)}
+    .box {flex:none;width:23px;height:23px;border:1.5px solid #526576;border-radius:7px;display:grid;place-items:center;font-size:15px;font-weight:800}
+    .name {font-size:14px;line-height:1.45;flex:1}.task.done {border-color:#315a48;background:#1a2b26}.done .box {background:var(--green);border-color:var(--green);color:#17251e}.done .name {color:#abd2be;text-decoration:line-through}
+    .key {color:var(--muted);font-size:10px;display:none}@media(min-width:560px){.key{display:block}}
+    #status {font-size:12px;color:var(--muted);line-height:1.6;margin:18px 0 0;min-height:20px} #status.error {color:#ffaaa5}
+    #demo {display:none;padding:10px 12px;border:1px solid #655337;border-radius:10px;color:var(--gold);font-size:12px;margin-bottom:20px}
+    footer {margin-top:22px;border-top:1px solid var(--edge);padding-top:15px;font-size:11px;line-height:1.8;color:var(--muted)}
+    button:focus-visible {outline:2px solid var(--green);outline-offset:3px}
+    .actions{display:flex;gap:6px}.edit{background:var(--green);color:#14281f;border:0;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:700;min-height:40px}
+    .complete{background:#203a2f;color:var(--green);border:1px solid #3c6a55;border-radius:9px;padding:9px 10px;font-size:12px;font-weight:700;min-height:40px;white-space:nowrap}
+    @media(max-width:480px){.section-head{flex-wrap:wrap;gap:10px}.actions{width:100%;justify-content:flex-end}.actions .complete,.actions .clear{flex:0 0 72px;min-height:40px;padding:9px 10px;font-size:11px;font-weight:400}}
+    dialog{width:min(520px,calc(100% - 24px));max-height:85dvh;border:1px solid var(--edge);border-radius:18px;background:var(--bg);color:var(--text);padding:20px;overflow:auto}dialog::backdrop{background:#000a}
+    .edit-help{font-size:12px;line-height:1.7;color:var(--muted);margin:10px 0 16px}.edit-list{display:grid;gap:8px}.edit-row{display:flex;gap:8px;align-items:center;padding:12px 10px;background:var(--panel);border-radius:12px;border:1px solid var(--edge);flex-wrap:wrap}.edit-row.hidden .edit-name{color:var(--muted)}.edit-name{flex:1;min-width:130px;font-size:13px;line-height:1.5}.edit-controls{display:flex;gap:5px;margin-left:auto}.edit-controls button{min-width:38px;min-height:42px;border:1px solid var(--edge);border-radius:8px;background:var(--bg);color:var(--text);padding:6px 8px;font-size:12px}.edit-controls .visibility{min-width:72px}.dialog-footer{position:sticky;bottom:-20px;background:var(--bg);padding:14px 0 5px;display:flex;justify-content:flex-end;gap:8px;margin-top:12px}.empty{color:var(--muted);font-size:13px;padding:16px 0}.layout-error{color:#ffaaa5;font-size:12px;line-height:1.6}
+    .edit-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;transition:background .18s,border-color .18s}.edit-label{min-width:0}.edit-name{display:block;min-width:0;transition:color .18s}.edit-state{display:flex;align-items:center;gap:5px;margin-top:4px;color:var(--muted);font-size:10px;line-height:1.5}.edit-state::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);flex:none}.edit-row.hidden{background:#171c23;border:1px dashed #756448}.edit-row.hidden .edit-name{color:#aab3bc}.edit-row.hidden .edit-state{color:var(--gold)}.edit-row.hidden .edit-state::before{width:6px;height:6px;background:transparent;border:1px solid var(--gold)}.edit-controls .visibility{min-width:76px;padding:6px 10px;transition:background .18s,color .18s,border-color .18s}.edit-row.hidden .visibility{background:#203a2f;color:var(--green);border-color:#3c6a55}
+    .drag-handle{display:grid;place-items:center;width:28px;min-height:42px;border:0;background:transparent;color:var(--muted);font-size:25px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+    .drag-source{border:1px dashed var(--green);background:#20382c;opacity:.38}.drag-ghost{position:fixed;z-index:20;margin:0;pointer-events:none;box-shadow:0 14px 32px #0009;border-color:var(--green);background:#23362e;opacity:1;transform-origin:center;will-change:transform}
+    .drag-active{cursor:grabbing;user-select:none}.drag-active .edit-controls{pointer-events:none}.drag-active .drag-handle{cursor:grabbing}.drag-handle:active{color:var(--green)}
+    .add-task{display:flex;gap:8px;margin:12px 0 16px}.add-task input{min-width:0;flex:1;min-height:44px;background:var(--panel);border:1px solid var(--edge);border-radius:9px;color:var(--text);padding:10px;font:inherit;font-size:13px}.edit-controls{flex-wrap:nowrap;justify-content:flex-end}.edit-controls .remove{min-width:48px;color:#ffaaa5;border-color:#69433f}.undo-task{margin-top:10px;color:var(--gold)}
+    #layout-feedback{min-height:20px;margin:8px 0 0}
+    .discord-panel{margin-top:24px;border:1px solid var(--edge);border-radius:14px;background:var(--panel);padding:15px}.discord-panel summary{cursor:pointer;font-size:14px;font-weight:700}.discord-badge{float:right;font-size:11px;color:var(--muted);font-weight:400}.discord-panel p,.discord-panel ol{font-size:12px;line-height:1.8;color:var(--muted)}.discord-panel label{display:block;font-size:12px;margin:12px 0 7px}.discord-panel input[type=password]{width:100%;min-height:44px;background:var(--bg);color:var(--text);border:1px solid var(--edge);border-radius:9px;padding:10px;font:inherit;font-size:12px}.discord-panel .notification-toggle{display:flex;align-items:center;gap:8px;min-height:40px}.notification-toggle input{accent-color:var(--green);width:18px;height:18px}.discord-panel a{color:var(--green)}#discord-status{overflow-wrap:anywhere}
+    @media(prefers-reduced-motion:reduce){.drag-ghost{will-change:auto}.fill,.edit-row,.edit-name,.visibility{transition:none}}
+    [hidden]{display:none!important}.top-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+    #offline-banner{margin-bottom:18px;padding:12px;border:1px solid #655337;border-radius:10px;color:var(--gold);font-size:12px;line-height:1.7}
+    @media(max-width:380px){.top{align-items:flex-start}h1{font-size:24px}.refresh{padding:0 10px;font-size:12px}}
+  </style>
+</head>
+<body>
+<main>
+  <div id="offline-banner" role="status" hidden>오프라인 · 체크는 이 기기에 저장하고 연결되면 전송합니다.</div>
+  <div class="eyebrow">ENDFIELD / CHECKLIST</div>
+  <div class="top"><h1>오늘의 할 일</h1><div class="top-buttons"><button class="refresh" id="logout">연결 설정</button><button class="refresh" id="install" hidden>앱 설치</button><button class="refresh" id="refresh">새로고침</button></div></div>
+  <p class="lead">하나씩 마무리하고 체크하세요.</p>
+  <div class="summary">
+    <div class="metric"><small>일일 완료</small><strong id="daily-count">— / 14</strong><div class="track"><div class="fill" id="daily-fill"></div></div></div>
+    <div class="metric week"><small>주간 완료</small><strong id="weekly-count">— / 2</strong><div class="track"><div class="fill" id="weekly-fill"></div></div></div>
+  </div>
+  <section><div class="section-head"><div><h2>일일 체크</h2><div class="reset" id="daily-reset">매일 새벽 5시 · 한국 시간</div></div><div class="actions"><button class="edit" data-edit="daily" disabled>편집</button><button class="complete" data-complete="daily" disabled>모두 체크</button><button class="clear" data-clear="daily" disabled>체크 해제</button></div></div><div class="tasks" id="daily-tasks"></div></section>
+  <section><div class="section-head"><div><h2>주간 체크</h2><div class="reset" id="weekly-reset">월요일 새벽 5시 · 한국 시간</div></div><div class="actions"><button class="edit" data-edit="weekly" disabled>편집</button><button class="complete" data-complete="weekly" disabled>모두 체크</button><button class="clear" data-clear="weekly" disabled>체크 해제</button></div></div><div class="tasks" id="weekly-tasks"></div></section>
+  <p id="status" role="status" aria-live="polite">목록을 불러오는 중…</p>
+  <details class="discord-panel" id="discord-panel"><summary>디스코드 알림 <span class="discord-badge" id="discord-badge">연결 안 됨</span></summary>
+    <p>한국 시간 기준 · 일일 매일 22:00 / 주간 일요일 22:00<br>숨긴 항목을 제외한 미완료 업무와 체크리스트 링크를 보냅니다. 모두 완료하면 보내지 않습니다. 5분마다 확인하므로 전송이 몇 분 늦어질 수 있습니다.</p>
+    <label for="discord-webhook">웹훅 URL</label><input type="password" id="discord-webhook" autocomplete="off" spellcheck="false" placeholder="디스코드에서 복사한 웹훅 URL" aria-describedby="discord-secret-help">
+    <p id="discord-secret-help">URL은 서버에만 저장하며 다시 표시하지 않습니다. 이미 연결했다면 비워 두어도 유지됩니다.</p>
+    <label class="notification-toggle"><input type="checkbox" id="discord-enabled">일일·주간 알림 사용</label>
+    <button class="edit" id="discord-save" disabled>알림 설정 저장</button> <button class="refresh" id="discord-test" disabled>연결 테스트</button><p id="discord-status" role="status" aria-live="polite"></p>
+    <p>웹훅 만드는 방법</p><ol><li>디스코드 서버 설정 → 연동 → 웹훅 만들기</li><li>알림을 받을 텍스트 채널을 선택하고 웹훅 URL 복사</li><li>위 입력란에 붙여넣고 ‘알림 사용’을 켠 뒤 저장</li><li>휴대폰 알림을 받으려면 해당 채널 알림을 ‘모든 메시지’로 설정</li></ol>
+    <p><a href="https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks" target="_blank" rel="noopener">디스코드 공식 웹훅 안내</a></p>
+  </details>
+  <footer>일일 · 매일 05:00 / 주간 · 월요일 05:00 (한국 시간)<br>다른 기기와 30초마다 동기화합니다.<br>오프라인 체크는 앱을 다시 열거나 연결이 복구되면 전송합니다.</footer>
+</main>
+<dialog id="layout-dialog" aria-labelledby="layout-title"><h2 id="layout-title">목록 편집</h2><p class="edit-help">왼쪽 ⠿를 잡고 드래그해서 순서를 바꾸세요.<br>새로 숨긴 항목은 기존 숨김 목록 바로 위로 이동합니다. 추가·삭제는 저장을 눌러야 적용됩니다.</p><form class="add-task" id="task-add-form"><input id="task-new-name" aria-label="추가할 항목 이름" placeholder="새 항목 이름" maxlength="50" autocomplete="off"><button class="edit" type="submit" id="task-add">추가</button></form><button type="button" class="clear undo-task" id="task-undo" hidden>삭제 되돌리기</button><div class="edit-list" id="layout-list"></div><p class="edit-help" id="layout-feedback" role="status"></p><p class="layout-error" id="layout-error" role="status"></p><div class="dialog-footer"><button class="refresh" id="layout-cancel">취소</button><button class="edit" id="layout-save">저장</button></div></dialog>
+<dialog id="login-dialog" aria-labelledby="login-title">
+  <form id="login-form"><h2 id="login-title">서버 연결</h2>
+  <p class="edit-help">기존 Apps Script와 연결하면 휴대폰·PC가 같은 체크리스트를 사용합니다.<br>배포 주소와 연결 키를 각 기기에서 입력해주세요. 이 기기의 브라우저에만 저장되며 GitHub에는 업로드되지 않습니다.</p>
+  <label for="server-url">Apps Script 배포 주소</label><input type="url" id="server-url" required autocomplete="off" style="width:100%;min-height:44px;margin:10px 0;padding:10px;background:var(--panel);color:var(--text);border:1px solid var(--edge);border-radius:9px">
+  <label for="login-password">API 연결 키</label><input type="password" id="login-password" required autocomplete="off" spellcheck="false" style="width:100%;min-height:44px;padding:10px;margin:12px 0;background:var(--panel);color:var(--text);border:1px solid var(--edge);border-radius:9px;font:inherit">
+  <p id="login-error" class="layout-error" role="status"></p><div class="dialog-footer"><button class="refresh" id="connection-close" type="button">닫기</button><button class="refresh" id="connection-remove" type="button">이 기기 연결 해제</button><button class="edit" id="login-submit" type="submit">연결 확인·저장</button></div></form>
+</dialog>
+<script type="module">
+  import {appsScriptCall, DEFAULT_URL} from "./api.js";
+  const demoMode = false;
+  let snapshot = null, busy = false, clockOffset = 0, loaded = false;
+  let editing = null;
+  let dragState = null;
+  let discordSettings = {enabled:false,configured:false,revision:0};
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = id => document.getElementById(id);
+  const CONFIG_KEY='endfield-pwa-connection-v1';
+  let connection=null;
+  try{connection=JSON.parse(localStorage.getItem(CONFIG_KEY));}catch(_){}
+  function showLogin(){
+    $('server-url').value=connection?.url||DEFAULT_URL;
+    $('login-password').value='';
+    if(!$('login-dialog').open)$('login-dialog').showModal();
+  }
+  $('connection-close').onclick=()=>$('login-dialog').close();
+  $('logout').onclick=showLogin;
+  $('connection-remove').onclick=()=>{
+    if(pending.length){$('login-error').textContent='전송 대기 체크가 있습니다. 먼저 동기화를 완료해주세요.';return;}
+    if(!confirm('이 기기의 연결 키와 저장된 체크리스트를 지울까요? 서버 데이터는 유지됩니다.'))return;
+    localStorage.removeItem(CONFIG_KEY);localStorage.removeItem(CACHE_KEY);localStorage.removeItem(QUEUE_KEY);location.reload();
+  };
+  $('login-form').onsubmit=async event=>{
+    event.preventDefault();$('login-submit').disabled=true;$('login-error').textContent='서버 연결 확인 중…';
+    try{
+      const config={url:$('server-url').value.trim(),token:$('login-password').value.trim()};
+      if(pending.length&&connection&&connection.url!==config.url)throw new Error('전송 대기 체크를 동기화한 뒤 서버 주소를 변경해주세요.');
+      const data=await appsScriptCall(config,'getChecklist',[]);
+      localStorage.setItem(CONFIG_KEY,JSON.stringify(config));connection=config;
+      $('login-password').value='';$('login-dialog').close();clockOffset=data.serverTime-Date.now();
+      cacheSnapshot(data);renderWithPending(data);syncStatus();await refresh();
+    }catch(error){$('login-error').textContent=error.message||'연결에 실패했습니다.';}
+    finally{$('login-submit').disabled=false;}
+  };
+  async function call(name,...args){
+    if(!connection?.token){showLogin();throw new Error('연결 설정에서 API 연결 키를 입력해주세요.');}
+    return appsScriptCall(connection,name,args);
+  }
+  function status(text,error=false) {$('status').textContent=text;$('status').classList.toggle('error',error);}
+  function disable(value) {$('task-new-name').disabled=value;document.querySelectorAll('button').forEach(b=>{if(!b.closest('#login-dialog')&&b.id!=='logout')b.disabled=value;});$('discord-webhook').disabled=value;$('discord-enabled').disabled=value;$('discord-save').disabled=value||demoMode;$('discord-test').disabled=value||demoMode||!discordSettings.configured;}
+  function drawDiscord(settings){
+    discordSettings=settings;$('discord-enabled').checked=settings.enabled;
+    $('discord-badge').textContent=settings.enabled?'알림 켜짐':settings.configured?'알림 꺼짐':'연결 안 됨';
+    $('discord-webhook').placeholder=settings.configured?'연결됨 · 변경할 때만 새 URL 입력':'디스코드에서 복사한 웹훅 URL';
+    $('discord-status').textContent=demoMode?'미리보기에서는 디스코드 연결을 저장하지 않습니다.':settings.lastError||(settings.lastSent?'최근 전송 · '+new Date(settings.lastSent).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):settings.enabled?'설정된 시간에 미완료 업무를 확인합니다.':'웹훅을 연결하고 알림을 켜주세요.');
+    $('discord-status').className=settings.lastError?'layout-error':'';
+  }
+  function draw(data) {
+    snapshot=data;clockOffset=data.serverTime-Date.now();loaded=true;
+    drawDiscord(data.discord||discordSettings);
+    for(const period of ['daily','weekly']) {
+      const tasks=data.tasks.filter(t=>t.period===period&&!t.hidden), count=tasks.filter(t=>t.done).length;
+      $(period+'-count').textContent=count+' / '+tasks.length;
+      $(period+'-fill').style.width=(tasks.length?count/tasks.length*100:0)+'%';
+      const container=$(period+'-tasks');container.replaceChildren();
+      if(!tasks.length){const empty=document.createElement('p');empty.className='empty';empty.textContent='표시할 항목이 없습니다. 편집에서 항목을 추가하거나 다시 표시할 수 있어요.';container.append(empty);}
+      tasks.forEach(task=>{
+        const button=document.createElement('button');button.className='task'+(task.done?' done':'');button.type='button';button.dataset.id=task.id;
+        button.setAttribute('aria-pressed',String(task.done));
+        const box=document.createElement('span');box.className='box';box.textContent=task.done?'✓':'';box.setAttribute('aria-hidden','true');
+        const label=document.createElement('span');label.className='name';label.textContent=task.name;
+        button.append(box,label);
+        const index=data.tasks.filter(t=>!t.hidden).indexOf(task);
+        if(index<9){const key=document.createElement('span');key.className='key';key.textContent='Ctrl+Alt+'+(index+1);button.append(key);}
+        button.addEventListener('click',()=>change(task));container.append(button);
+      });
+    }
+    disable(busy);updateClock();
+  }
+  const CACHE_KEY = 'endfield-pwa-snapshot-v1';
+  const QUEUE_KEY = 'endfield-pwa-pending-v1';
+  let pending = [], flushing = false, storageAvailable = true, syncNotice = '';
+  function readLocal(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+    catch (_) { return fallback; }
+  }
+  pending = readLocal(QUEUE_KEY, []);
+  if (!Array.isArray(pending)) pending = [];
+  function savePending(next) {
+    try { localStorage.setItem(QUEUE_KEY, JSON.stringify(next)); pending = next; return true; }
+    catch (_) { storageAvailable = false; status('기기 저장 공간을 사용할 수 없어 체크를 저장하지 못했습니다.', true); return false; }
+  }
+  function renderWithPending(data) {
+    const copy = structuredClone(data);
+    // Server clock anchors period rollover; device clock is only a fallback offline.
+    const adjustedNow = Date.now() + clockOffset;
+    const shifted = new Date(adjustedNow + 4 * 3600000), monday = new Date(shifted);
+    monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7);
+    const cycles = {daily:shifted.toISOString().slice(0,10),weekly:monday.toISOString().slice(0,10),
+      nextDaily:Date.UTC(shifted.getUTCFullYear(),shifted.getUTCMonth(),shifted.getUTCDate()+1)-4*3600000,
+      nextWeekly:Date.UTC(monday.getUTCFullYear(),monday.getUTCMonth(),monday.getUTCDate()+7)-4*3600000};
+    for (const task of copy.tasks) {
+      if (copy.cycles[task.period] !== cycles[task.period]) task.done = false;
+      const edits = pending.filter(op => op.id === task.id && op.cycle === cycles[task.period]);
+      if (edits.length) task.done = edits[edits.length-1].done;
+    }
+    copy.cycles = cycles; copy.serverTime = adjustedNow;
+    draw(copy);
+  }
+  function cacheSnapshot(data) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }
+    catch (_) { storageAvailable = false; }
+  }
+  function syncStatus() {
+    $('offline-banner').hidden = navigator.onLine;
+    if (pending.length) status((navigator.onLine ? '기기에 저장됨 · 전송 대기 ' : '오프라인 · 전송 대기 ') + pending.length + '건' + (syncNotice ? ' · '+syncNotice : ''));
+    else status(syncNotice || (navigator.onLine ? '서버 동기화 완료 · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}) : '오프라인 · 저장된 목록을 표시합니다.'));
+  }
+  async function flushPending() {
+    if (flushing || busy || !navigator.onLine) return;
+    flushing = true; busy = true; disable(true);
+    try {
+      let latest = await call('getChecklist');
+      clockOffset = latest.serverTime - Date.now();
+      const valid = pending.filter(op => {
+        const task = latest.tasks.find(t => t.id === op.id);
+        return task && op.cycle === latest.cycles[task.period];
+      });
+      if (valid.length !== pending.length) syncNotice = '지난 기간 또는 삭제된 항목의 대기 변경은 적용하지 않았습니다.';
+      if (!savePending(valid)) return;
+      cacheSnapshot(latest); renderWithPending(latest);
+      while (pending.length) {
+        const op = pending[0]; status('서버에 전송 중… · '+pending.length+'건');
+        try { latest = await call('setChecked', op.id, op.done, op.cycle); }
+        catch (error) {
+          if (/초기화 시간이|올바르지 않은 항목/.test(error.message)) {
+            if (!savePending(pending.slice(1))) return;
+            syncNotice = '기간이 바뀌거나 삭제된 항목의 변경은 적용하지 않았습니다.';
+            latest = await call('getChecklist');
+            continue;
+          }
+          throw error;
+        }
+        // A retry is safe: requests set a boolean, never toggle the server value.
+        if (!savePending(pending.slice(1))) return;
+        clockOffset = latest.serverTime - Date.now();
+        cacheSnapshot(latest); renderWithPending(latest);
+      }
+      cacheSnapshot(latest); renderWithPending(latest); $('logout').hidden=false; syncStatus();
+    } catch (error) {
+      if (snapshot) {
+        status((pending.length ? ' 기기에 저장됨 · 전송 대기 '+pending.length+'건 · ' : '') + '서버 연결 대기: '+error.message, true);
+      } else { loaded = false; status('서버 연결에 실패했습니다: '+error.message, true); }
+    } finally { busy = false; flushing = false; disable(!loaded); $('refresh').disabled = false; $('offline-banner').hidden = navigator.onLine; }
+  }
+  async function refresh(silent=false) {
+    if (busy || editing || $('discord-panel').open) return;
+    if (!navigator.onLine) {
+      if (snapshot) renderWithPending(snapshot);
+      syncStatus(); return;
+    }
+    if (!silent) status('최신 상태를 불러오는 중…');
+    await flushPending();
+  }
+  async function mutate(name,...args) {
+    if (busy || !loaded || !snapshot) return;
+    let changes = [];
+    if (name === 'setChecked') changes = [{id:args[0], done:args[1], cycle:args[2]}];
+    else if (name === 'completePeriod' || name === 'clearPeriod') {
+      changes = snapshot.tasks.filter(t => t.period === args[0] && (name === 'clearPeriod' || !t.hidden))
+        .map(t => ({id:t.id, done:name === 'completePeriod', cycle:args[1]}));
+    }
+    if (!savePending(pending.concat(changes))) return;
+    renderWithPending(snapshot); syncStatus();
+    await flushPending();
+  }
+  function change(task) { mutate('setChecked', task.id, !task.done, snapshot.cycles[task.period]); }
+  function openEditor(period){
+    if(busy||!loaded)return;
+    if(!navigator.onLine || pending.length){status('목록 편집은 온라인 동기화가 끝난 뒤 사용할 수 있습니다.',true);return;}
+    editing={removed:[],period,revision:snapshot.layoutRevisions[period],tasks:snapshot.tasks.filter(t=>t.period===period).map(t=>({...t}))};
+    editing.tasks=[...editing.tasks.filter(t=>!t.hidden),...editing.tasks.filter(t=>t.hidden)];
+    $('task-new-name').value='';$('task-undo').hidden=true;
+    $('layout-title').textContent=(period==='daily'?'일일':'주간')+' 목록 편집';$('layout-error').textContent='';$('layout-feedback').textContent='';drawEditor();$('layout-dialog').showModal();
+  }
+  function drawEditor(){
+    const list=$('layout-list');list.replaceChildren();$('task-undo').hidden=!editing.removed.length;
+    editing.tasks.forEach(task=>{
+      const row=document.createElement('div');row.className='edit-row'+(task.hidden?' hidden':'');row.dataset.taskId=task.id;
+      const handle=document.createElement('button');handle.type='button';handle.className='drag-handle';handle.textContent='⠿';handle.setAttribute('aria-label',task.name+' 드래그하여 순서 변경');handle.addEventListener('pointerdown',event=>startDrag(event,row,task,handle));row.append(handle);
+      const label=document.createElement('div');label.className='edit-label';
+      const name=document.createElement('span');name.className='edit-name';name.textContent=task.name;
+      const state=document.createElement('span');state.className='edit-state';state.setAttribute('aria-live','polite');label.append(name,state);row.append(label);
+      const controls=document.createElement('div');controls.className='edit-controls';
+      const visibility=document.createElement('button');visibility.type='button';visibility.className='visibility';
+      const updateVisibility=()=>{row.classList.toggle('hidden',task.hidden);state.textContent=task.hidden?'숨김 · 체크 목록에서 제외':'체크 목록에 표시';visibility.textContent=task.hidden?'다시 표시':'숨기기';visibility.setAttribute('aria-label',task.name+' '+visibility.textContent);visibility.setAttribute('aria-pressed',String(task.hidden));};
+      visibility.onclick=()=>{
+        if(busy||dragState)return;
+        const before=editorPositions();task.hidden=!task.hidden;updateVisibility();
+        editing.tasks=editing.tasks.filter(t=>t.id!==task.id);
+        const next=editing.tasks.findIndex(t=>t.hidden);
+        editing.tasks.splice(next<0?editing.tasks.length:next,0,task);
+        const rows=new Map(Array.from(list.children).map(r=>[r.dataset.taskId,r]));editing.tasks.forEach(t=>list.append(rows.get(t.id)));
+        animateEditor(before,280);
+        $('layout-feedback').textContent=task.name+(task.hidden?' · 숨김 목록의 맨 위로 이동했습니다.':' · 표시 목록의 마지막으로 복원했습니다.');
+      };updateVisibility();controls.append(visibility);
+      const remove=document.createElement('button');remove.type='button';remove.className='remove';remove.textContent='삭제';remove.setAttribute('aria-label',task.name+' 삭제');remove.onclick=()=>{if(busy||dragState)return;const index=editing.tasks.indexOf(task);editing.removed.push({task,index});editing.tasks.splice(index,1);drawEditor();$('layout-feedback').textContent=task.name+' · 삭제 예정입니다. 저장 전에는 되돌릴 수 있어요.';};controls.append(remove);row.append(controls);list.append(row);
+    });
+  }
+  function editorPositions(){
+    const rows=Array.from($('layout-list').children);rows.forEach(row=>row.getAnimations().forEach(a=>a.cancel()));
+    return new Map(rows.map(row=>[row,row.getBoundingClientRect().top]));
+  }
+  function animateEditor(before,duration,excluded=null){
+    if(reduceMotion)return;
+    Array.from($('layout-list').children).forEach(row=>{if(row===excluded)return;const delta=before.get(row)-row.getBoundingClientRect().top;if(delta)row.animate([{transform:'translateY('+delta+'px)'},{transform:'translateY(0)'}],{duration,easing:'cubic-bezier(.2,.8,.2,1)'});});
+  }
+  function startDrag(event,row,task,handle){
+    if(busy||!editing||dragState||event.button!==0)return;
+    event.preventDefault();
+    editorPositions();const rect=row.getBoundingClientRect(),ghost=row.cloneNode(true);
+    ghost.classList.add('drag-ghost');ghost.setAttribute('aria-hidden','true');ghost.querySelectorAll('button').forEach(b=>b.tabIndex=-1);
+    Object.assign(ghost.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px'});
+    $('layout-dialog').append(ghost);row.classList.add('drag-source');$('layout-dialog').classList.add('drag-active');
+    dragState={row,task,handle,ghost,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,x:event.clientX,y:event.clientY,original:editing.tasks.slice(),frame:0};
+    try{handle.setPointerCapture(event.pointerId);}catch(_){}
+    $('layout-save').disabled=true;
+    moveGhost();dragState.frame=requestAnimationFrame(dragFrame);
+  }
+  function moveGhost(){if(!dragState)return;const d=dragState;d.ghost.style.transform='translate3d('+(d.x-d.startX)+'px,'+(d.y-d.startY)+'px,0) scale('+(reduceMotion?1:1.025)+')';}
+  function reorderDrag(){
+    if(!dragState||!editing)return;
+    const d=dragState,list=$('layout-list'),others=Array.from(list.children).filter(row=>row!==d.row);
+    const proposed=others.filter(row=>{const rect=row.getBoundingClientRect();return d.y>rect.top+rect.height/2;}).length;
+    const visibleCount=editing.tasks.filter(t=>!t.hidden).length;
+    const target=d.task.hidden?Math.max(visibleCount,proposed):Math.min(visibleCount-1,proposed);
+    const current=editing.tasks.findIndex(t=>t.id===d.task.id);if(current===target)return;
+    const before=editorPositions();
+    const [task]=editing.tasks.splice(current,1);editing.tasks.splice(target,0,task);list.insertBefore(d.row,others[target]||null);
+    animateEditor(before,170,d.row);
+  }
+  function dragFrame(){
+    if(!dragState)return;const dialog=$('layout-dialog'),bounds=dialog.getBoundingClientRect(),footer=dialog.querySelector('.dialog-footer').getBoundingClientRect();
+    const top=bounds.top+48,bottom=Math.min(bounds.bottom-30,footer.top-8),y=dragState.y;
+    const speed=y<top?-Math.min(14,(top-y)*.3):y>bottom?Math.min(14,(y-bottom)*.3):0;
+    if(speed){dialog.scrollTop+=speed;reorderDrag();}
+    dragState.frame=requestAnimationFrame(dragFrame);
+  }
+  function endDrag(commit){
+    if(!dragState)return;const d=dragState;dragState=null;cancelAnimationFrame(d.frame);
+    try{d.handle.releasePointerCapture(d.pointerId);}catch(_){}
+    if(!commit&&editing){editing.tasks=d.original;const list=$('layout-list');editing.tasks.forEach(task=>{const row=Array.from(list.children).find(r=>r.dataset.taskId===task.id);if(row)list.append(row);});}
+    const rect=d.row.getBoundingClientRect();$('layout-dialog').classList.remove('drag-active');$('layout-save').disabled=false;
+    if(commit&&!reduceMotion){const animation=d.ghost.animate([{transform:d.ghost.style.transform},{transform:'translate3d('+(rect.left-parseFloat(d.ghost.style.left))+'px,'+(rect.top-parseFloat(d.ghost.style.top))+'px,0) scale(1)'}],{duration:150,easing:'ease-out',fill:'forwards'});animation.finished.catch(()=>{}).finally(()=>{d.ghost.remove();d.row.classList.remove('drag-source');});}
+    else{d.ghost.remove();d.row.classList.remove('drag-source');}
+    if(editing)drawEditor();
+  }
+  window.addEventListener('pointermove',event=>{if(!dragState||event.pointerId!==dragState.pointerId)return;event.preventDefault();dragState.x=event.clientX;dragState.y=event.clientY;moveGhost();reorderDrag();},{passive:false});
+  window.addEventListener('pointerup',event=>{if(dragState&&event.pointerId===dragState.pointerId)endDrag(true);});
+  window.addEventListener('pointercancel',event=>{if(dragState&&event.pointerId===dragState.pointerId)endDrag(false);});
+  window.addEventListener('blur',()=>{if(dragState)endDrag(false);});
+  function cancelEditor(){if(busy)return;endDrag(false);$('layout-dialog').close();editing=null;refresh(true);}
+  async function saveEditor(){
+    if(busy||!editing||dragState)return;busy=true;disable(true);$('layout-error').textContent='저장 중…';
+    try{const data=await call('saveTaskList',editing.period,editing.tasks.map(t=>({id:t.id,name:t.name,hidden:!!t.hidden})),editing.revision);$('layout-dialog').close();editing=null;cacheSnapshot(data);draw(data);status(demoMode?'미리보기 설정 저장 완료':'목록 설정 저장 완료');}
+    catch(error){$('layout-error').textContent=error.message||String(error);}
+    finally{busy=false;disable(!loaded);if(editing)drawEditor();}
+  }
+  document.querySelectorAll('[data-edit]').forEach(button=>{button.setAttribute('aria-label',(button.dataset.edit==='daily'?'일일':'주간')+' 목록 편집');button.onclick=()=>openEditor(button.dataset.edit);});
+  $('task-add-form').onsubmit=event=>{
+    event.preventDefault();if(busy||!editing||dragState)return;
+    const name=$('task-new-name').value.trim();
+    if(!name){$('layout-error').textContent='추가할 항목 이름을 입력해주세요.';$('task-new-name').focus();return;}
+    if(editing.tasks.length+snapshot.tasks.filter(t=>t.period!==editing.period).length>=40){$('layout-error').textContent='항목은 합쳐서 최대 40개까지 추가할 수 있습니다.';return;}
+    const task={id:'custom-'+crypto.randomUUID(),name,period:editing.period,hidden:false,done:false};
+    const firstHidden=editing.tasks.findIndex(t=>t.hidden);editing.tasks.splice(firstHidden<0?editing.tasks.length:firstHidden,0,task);
+    $('task-new-name').value='';$('layout-error').textContent='';drawEditor();$('layout-feedback').textContent=name+' · 추가했습니다. 저장을 눌러 적용하세요.';$('task-new-name').focus();
+  };
+  $('task-undo').onclick=()=>{if(busy||!editing||dragState)return;const removed=editing.removed.pop();if(!removed)return;const count=editing.tasks.filter(t=>!t.hidden).length;const index=removed.task.hidden?Math.max(count,Math.min(removed.index,editing.tasks.length)):Math.min(removed.index,count);editing.tasks.splice(index,0,removed.task);drawEditor();$('layout-feedback').textContent=removed.task.name+' · 삭제를 되돌렸습니다.';};
+  $('layout-cancel').onclick=cancelEditor;$('layout-save').onclick=saveEditor;
+  $('layout-dialog').addEventListener('cancel',event=>{event.preventDefault();cancelEditor();});
+  function updateClock() {
+    if(!snapshot)return;
+    const now=Date.now()+clockOffset;
+    for(const period of ['daily','weekly']){
+      const next=snapshot.cycles[period==='daily'?'nextDaily':'nextWeekly'];
+      const min=Math.max(0,Math.ceil((next-now)/60000)), days=Math.floor(min/1440),hours=Math.floor(min%1440/60),minutes=min%60;
+      const schedule=period==='daily'?'매일 새벽 5시':'월요일 새벽 5시';
+      $(period+'-reset').textContent=schedule+' · '+(days?days+'일 ':'')+hours+'시간 '+minutes+'분 후';
+    }
+  }
+  $('refresh').addEventListener('click',()=>refresh());
+  $('discord-save').addEventListener('click',async()=>{
+    if(busy||!loaded||demoMode)return;
+    busy=true;disable(true);$('discord-status').textContent='알림 설정 저장 중…';
+    try{const settings=await call('saveDiscordSettings',$('discord-webhook').value,$('discord-enabled').checked,discordSettings.revision);$('discord-webhook').value='';drawDiscord(settings);$('discord-status').textContent=settings.enabled?'알림을 켰습니다. 한국 시간 기준 밤 10시 이후 미완료 업무가 있으면 보냅니다.':'알림을 껐습니다.';}
+    catch(error){$('discord-status').textContent='저장하지 못했습니다. '+(error.message||'권한을 확인하고 다시 시도해주세요.');$('discord-status').className='layout-error';}
+    finally{busy=false;disable(!loaded);}
+  });
+  $('discord-test').addEventListener('click',async()=>{
+    if(busy||demoMode||!discordSettings.configured)return;
+    busy=true;disable(true);$('discord-status').textContent='저장한 웹훅으로 테스트 메시지를 보내는 중…';
+    try{const result=await call('testDiscordConnection');$('discord-status').textContent=result.message;$('discord-status').className=result.ok?'':'layout-error';}
+    catch(_){$('discord-status').textContent='연결 테스트에 실패했습니다. Google 권한을 확인하고 다시 시도해주세요.';$('discord-status').className='layout-error';}
+    finally{busy=false;disable(!loaded);}
+  });
+  document.querySelectorAll('[data-complete]').forEach(button=>{
+    button.setAttribute('aria-label',(button.dataset.complete==='daily'?'일일':'주간')+' 업무 모두 체크');
+    button.addEventListener('click',()=>{const period=button.dataset.complete;if(snapshot)mutate('completePeriod',period,snapshot.cycles[period]);});
+  });
+  document.querySelectorAll('[data-clear]').forEach(button=>button.addEventListener('click',()=>{
+    const period=button.dataset.clear;if(snapshot&&confirm((period==='daily'?'일일':'주간')+' 체크를 모두 해제할까요?'))mutate('clearPeriod',period,snapshot.cycles[period]);
+  }));
+  document.addEventListener('keydown',event=>{
+    if(event.ctrlKey&&event.altKey&&/^[1-9]$/.test(event.key)&&snapshot&&!busy&&!editing&&loaded){event.preventDefault();const task=snapshot.tasks.filter(t=>!t.hidden)[Number(event.key)-1];if(task)change(task);}
+  });
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh(true);});
+  setInterval(()=>{if(!document.hidden)refresh(true);},30000);
+  setInterval(() => {
+    if (!snapshot) return;
+    const now = Date.now() + clockOffset;
+    if (now >= snapshot.cycles.nextDaily || now >= snapshot.cycles.nextWeekly) {
+      renderWithPending(snapshot); refresh(true);
+    }
+    updateClock();
+  },1000);
+  const cached = readLocal(CACHE_KEY, null);
+  if (cached && Array.isArray(cached.tasks) && cached.cycles) {renderWithPending(cached);syncStatus();}
+  window.addEventListener('online', () => {syncStatus();refresh(true);});
+  window.addEventListener('offline', syncStatus);
+  let installPrompt = null;
+  window.addEventListener('beforeinstallprompt', event => {event.preventDefault();installPrompt=event;$('install').hidden=false;});
+  $('install').onclick = async () => {if(!installPrompt)return;await installPrompt.prompt();installPrompt=null;$('install').hidden=true;};
+  window.addEventListener('appinstalled', () => {$('install').hidden=true;});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+  refresh();
+</script>
+</body>
+</html>
