@@ -1,6 +1,6 @@
 const BASE = new URL('./',self.location.href).pathname;
-const CACHE = 'endfieldcheck-shell-v3';
-const SHELL = ['','manifest.webmanifest','icon-192.png','icon-512.png','api.js'].map(path=>BASE+path);
+const CACHE = 'endfieldcheck-shell-v4';
+const SHELL = ['','manifest.webmanifest','icon-192.png','icon-512.png','api.js','connection.js','qrcode.js'].map(path=>BASE+path);
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });

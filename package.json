@@ -1,1 +1,14 @@
-{"name":"endfieldcheck","private":true,"type":"module","scripts":{"build":"node scripts/build.mjs","test":"node --test scripts/test.mjs scripts/direct-api.test.mjs","dev":"node scripts/preview.mjs"}}
+{
+  "name": "endfieldcheck",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test scripts/test.mjs scripts/direct-api.test.mjs scripts/connection.test.mjs",
+    "dev": "node scripts/preview.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "qrcode": "^1.5.4"
+  }
+}
