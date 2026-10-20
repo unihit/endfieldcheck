@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 const html=readFileSync('public/index.html','utf8');
-const queueCode=html.slice(html.indexOf('  const CACHE_KEY'),html.indexOf('  async function openEditor'));
+const queueCode=html.slice(html.indexOf('  const CACHE_KEY'),html.indexOf('  function openEditor'));
 function client({online=false,server,now=Date.parse('2026-10-07T12:00:00Z')}={}){
  const storage=new Map(), elements=new Map();
  const initial={tasks:[{id:'a',period:'daily',name:'A',done:false},{id:'b',period:'daily',name:'B',done:false}],cycles:{daily:'2026-10-07',weekly:'2026-10-05',nextDaily:Date.parse('2026-10-07T20:00:00Z'),nextWeekly:Date.parse('2026-10-11T20:00:00Z')},serverTime:now};
