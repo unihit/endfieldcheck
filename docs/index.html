@@ -98,7 +98,7 @@
   if(incomingCode)history.replaceState(null,'',location.pathname+location.search);
   const demoMode = false;
   let snapshot = null, busy = false, clockOffset = 0, loaded = false;
-  let editing = null;
+  let editing = null, openingEditor = false;
   let dragState = null;
   let discordSettings = {enabled:false,configured:false,revision:0};
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -318,13 +318,30 @@
     await flushPending();
   }
   function change(task) { mutate('setChecked', task.id, !task.done, snapshot.cycles[task.period]); }
-  function openEditor(period){
-    if(busy||!loaded)return;
-    if(!navigator.onLine || pending.length){status('목록 편집은 온라인 동기화가 끝난 뒤 사용할 수 있습니다.',true);return;}
-    editing={removed:[],period,revision:snapshot.layoutRevisions[period],tasks:snapshot.tasks.filter(t=>t.period===period).map(t=>({...t}))};
-    editing.tasks=[...editing.tasks.filter(t=>!t.hidden),...editing.tasks.filter(t=>t.hidden)];
-    $('task-new-name').value='';$('task-undo').hidden=true;
-    $('layout-title').textContent=(period==='daily'?'일일':'주간')+' 목록 편집';$('layout-error').textContent='';$('layout-feedback').textContent='';drawEditor();$('layout-dialog').showModal();
+  // Wait for a running sync to settle so the editor always starts from the latest revision.
+  async function settleSync() {
+    const deadline = Date.now() + 25000;
+    while ((flushing || syncing) && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 120));
+    if (!flushing && pending.length) await flushPending();
+  }
+  async function openEditor(period){
+    if(!loaded||openingEditor||editing)return;
+    if(busy){status('다른 작업이 진행 중입니다. 잠시 후 다시 눌러주세요.',true);return;}
+    if(!navigator.onLine){status('목록 편집은 연결된 상태에서만 열 수 있습니다. 연결되면 다시 눌러주세요.',true);return;}
+    openingEditor=true;
+    try{
+      if(pending.length || flushing || syncing){
+        status(pending.length ? '전송 대기 '+pending.length+'건을 먼저 보내는 중…' : '동기화가 끝나기를 기다리는 중…');
+        await settleSync();
+        if(pending.length){status('전송 대기 '+pending.length+'건이 남아 있어 편집을 열지 못했습니다. 잠시 후 다시 눌러주세요.',true);return;}
+      }
+      const revisions = snapshot.layoutRevisions || {};
+      editing={removed:[],period,revision:revisions[period] ?? 0,tasks:snapshot.tasks.filter(t=>t.period===period).map(t=>({...t}))};
+      editing.tasks=[...editing.tasks.filter(t=>!t.hidden),...editing.tasks.filter(t=>t.hidden)];
+      $('task-new-name').value='';$('task-undo').hidden=true;
+      $('layout-title').textContent=(period==='daily'?'일일':'주간')+' 목록 편집';$('layout-error').textContent='';$('layout-feedback').textContent='';drawEditor();$('layout-dialog').showModal();
+    }catch(error){editing=null;status('목록 편집을 열지 못했습니다: '+(error.message||error),true);}
+    finally{openingEditor=false;}
   }
   function drawEditor(){
     const list=$('layout-list');list.replaceChildren();$('task-undo').hidden=!editing.removed.length;
