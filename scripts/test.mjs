@@ -41,3 +41,22 @@ test('storage failure does not claim a check was saved',async()=>{
  const c=client();c.sandbox.localStorage.setItem=()=>{throw new Error('quota');};await c.evaluate("mutate('setChecked','a',true,'2026-10-07')");
  assert.equal(c.sandbox.snapshot.tasks[0].done,false);assert.match(c.message(),/저장하지 못했습니다/);
 });
+test('checks made while a background sync is running are queued and sent',async()=>{
+ const c=client();c.sandbox.navigator.onLine=true;
+ let release;const gate=new Promise(resolve=>{release=resolve;});
+ const data=structuredClone(c.sandbox.snapshot);data.serverTime=Date.parse('2026-10-07T12:00:00Z');
+ const writes=[];
+ c.sandbox.call=async(name,...args)=>{
+  if(name==='getChecklist')await gate;
+  if(name==='setChecked'){writes.push(args[0]);data.tasks.find(t=>t.id===args[0]).done=args[1];}
+  return structuredClone(data);
+ };
+ const sync=c.evaluate('flushPending()');
+ await c.evaluate("mutate('setChecked','b',true,'2026-10-07')");
+ assert.equal(c.shown().tasks[1].done,true);          // optimistic feedback while the request is in flight
+ assert.equal(JSON.parse(c.storage.get('endfield-pwa-pending-v1')).length,1);
+ release();
+ await sync;
+ assert.deepEqual(writes,['b']);
+ assert.equal(JSON.parse(c.storage.get('endfield-pwa-pending-v1')).length,0);
+});
